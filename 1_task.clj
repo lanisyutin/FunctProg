@@ -26,7 +26,7 @@
    )
 )
 
-(println (comb '("a", "b", "c"), 4))
+(println (comb '("a", "b", "c"), 3))
 
 
 ; 2.
@@ -39,18 +39,54 @@
    )
 )
 
-(println (comb-tail '("a", "b", "c"), 4))
+(println (comb-tail '("a", "b", "c"), 2))
 
 
-; 3.
+; 3. my-map, my-filter
 (defn my-map  
    [f, coll] 
    (if (= (count coll) 1)
-         (list (f coll))
+         (list (f (first coll)))
          (concat
-            (my-map f (first coll))
+            (my-map f (list (first coll)))
             (my-map f (rest coll)))
-      )
+   )
 )
 
-(println (my-map  (fn [x] (* x x)), (range 0 5)))
+(println (my-map (fn [x] (* x x)), (range 0 5)))
+(println (my-map (fn [x] (count x)), (comb-tail '("a", "b", "c"), 3)))
+
+
+(defn my-filter 
+   [predicate, coll] 
+   (if (= (count coll) 1)
+         (if (predicate (first coll))
+            (list (first coll)))
+         (concat
+            (my-filter predicate, (list (first coll)))
+            (my-filter predicate, (rest coll)))
+   )
+)
+
+(println (my-filter even?, (range 0 10)))
+
+
+; 4.
+; map/reduce/filter
+(defn comb4 [letters, n] 
+   (if (= n 1)
+      letters
+      (for [x letters y (comb4 letters (- n 1)) :when (not= x (str (first (seq y))))] (str x y))))
+   
+(println (comb4 '("a", "b", "c"), 3))
+
+
+(defn comb4-tail  
+   ([letters, n] (comb4-tail letters n letters))
+   ([letters, n, acc]
+   (if (= n 1)
+      acc
+      (recur letters (dec n) (for [x letters y acc :when (not= x (str (first (seq y))))] (str x y))))))
+
+   
+(println (comb4-tail '("a", "b", "c"), 3))

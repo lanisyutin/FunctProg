@@ -1,62 +1,29 @@
+; 2.1 Eratosphen
 
-(defn prime-n [n]
-    (if (= n 1)
-        2
-    ()
+; (defn mod-p? [a, p]
+;     (= 0 (mod a p)))
 
-))
+; (defn filter-col [col p]
+;     (filter (fn [x] (not (mod-p? x p))) col))
 
+(defn era-prime-n [n]
+     (nth (reduce
+        (fn [primes number]
+          (if (some zero? (map (partial mod number) primes))
+            primes
+            (conj primes number)))
+        [2]
+        (take (* n n) (iterate inc 3))), n))
 
-(defn prime-n [n]
-    (nth (for [nums (iterate inc 2)
-          :when (prime? nums)] nums) n))
-
-(defn prime? 
-    ([2] true)
-    ([a] (every? false? 
-        (for [n (iterate inc 0)
-            :let [p (prime-n n)]
-            :while (< p a)]
-                (mod-p? a p)))))        
-
-(defn mod-p? [a, p]
-    (= 0 (mod a p)))
-
-(println (prime-n 5))
+(era-prime-n 0)
+(era-prime-n 1)
+(era-prime-n 2)
 
 
+; 2.2 Infinity prime
 
+(def inf-primes
+    (map era-prime-n (iterate inc 0)))
 
-(def primes
-    (lazy-seq
-        (for [nums (iterate inc 2)
-                :when (prime? nums)] nums)))
-
-
-
-
-(println (prime? 11))
-
-
-
-(def fibs
-    (lazy-seq ()))
-
-(let [fibs ()]
-(nth fibs 10))
-
-
-primes = [2..] \ [[p², p²+p..] for p in primes]
-
-(defn mod-p? [a, p]
-    (= 0 (mod a p)))
-    
-
-
-(println (mod-p? 3 2))
-
-
-
-(println (for [nums (range 2 100)
-:let [p (range 2 (dec nums))]
-:when (not= 0 (mod nums p))] nums))
+(nth inf-primes 1)
+(take 5 inf-primes)
