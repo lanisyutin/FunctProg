@@ -73,20 +73,32 @@
 
 ; 4.
 ; map/reduce/filter
-(defn comb4 [letters, n] 
-   (if (= n 1)
-      letters
-      (for [x letters y (comb4 letters (- n 1)) :when (not= x (str (first (seq y))))] (str x y))))
+(defn filter-collection [letter, coll]
+   (filter 
+      (fn [x] (not= (str (last x)), letter)),
+          coll))
+
+(defn concat_elem_to_each_other [elem input_list]
+   (map (fn [x] (.concat x elem)) (filter-collection elem input_list)))
+ 
+(defn product_iter [input_list acc elem]
+      (concat acc (concat_elem_to_each_other elem input_list)))
+ 
+(defn cartesian_product [first_list, second_list]
+   (reduce (partial product_iter first_list) (list) second_list))
+ 
+(defn comb4
+   [input_list, power]
+   (reduce (fn [accum _] (cartesian_product accum input_list)) input_list (range (dec power))))
+ 
+
+(println (comb4 `("a" "b" "c") 5))
+ 
+
+
+(filter-collection "b"  `("ba" "ab" "c"))
+(concat_elem_to_each_other "b"  `("ba" "ab" "c"))
+(product_iter `("a" "b" "c") `("a" "b" "c") "b")
+(cartesian_product `("a" "b" "c") `("a" "b" "c"))
+
    
-(println (comb4 '("a", "b", "c"), 3))
-
-
-(defn comb4-tail  
-   ([letters, n] (comb4-tail letters n letters))
-   ([letters, n, acc]
-   (if (= n 1)
-      acc
-      (recur letters (dec n) (for [x letters y acc :when (not= x (str (first (seq y))))] (str x y))))))
-
-   
-(println (comb4-tail '("a", "b", "c"), 3))

@@ -3,43 +3,125 @@
 ; 3.0 
 
 ; functions
+; trapec
+(require '[clojure.test :as test])
+
 (defn line [x] x)
-(defn sqr [x] (* x x))
+(defn sqr [x]
+  (Thread/sleep 10)
+  (* x x))
 
-(def ^:const h 0.001)
+(def ^:const h 0.0213)
 
-(defn integral-f [f]
+(defn finite-sum 
+  ([f, n]
+    (if (= 0 n)
+      (f 0)
+      (let [point (* n h)
+            val (f point)]
+            (println n point val)
+      (+ val (finite-sum f (dec n))
+    )))))
+
+
+(defn integral-f2 [f]
   (fn integral [x]
-    (reduce + 
-      (map (fn [a] (* a h)) 
-        (map f 
-          (for [dx (range 0 (- x h) h)] 
-            (+ dx (/ h 2))))))))
+    (let [n (int (quot x h))
+          x_w (* n h)
+          d_x (- x x_w)
+          tail (/ (* (f x) d_x) 2)]
+    (+ tail (* h (finite-sum f n))))))
 
 
+(int (quot 2 h))
+(foo line 3)
 
- ((integral-f line) 2) ; => exact 2
- ((integral-f sqr) 1)  ; => exact 0.33
-
-
-; memoize it 
-
-(def integral-memo 
-  (defn integral-f [f]
-    (memoize (fn integral [x]
-      (reduce + 
-        (map (fn [a] (* a h)) 
-          (map f 
-            (for [dx (range 0 (- x h) h)] 
-              (+ dx (/ h 2))))))))))
-
-(def f-memo (memoize line))
-
-(time (map (integral-f line) (take 20 (repeat 1000))))
-(time (map (integral-memo line) (take 20 (repeat 1000))))
+(def ^:const eps 0.1)
+(test/is (<= (- ((integral-f2 line) 2) 2) eps))
+(test/is (<= (- ((integral-f2 sqr) 1) 0.33) eps))
 
 
-(time ((integral-f line) 2))
-(time ((integral-f line) 100))
-(time ((integral-memo line) 2))
-(time ((integral-memo line) 100))
+(def memo-foo (memoize (fn   ([f, n]
+  (if (= 0 n)
+    (f 0)
+    (let [point (* n h)
+          val (f point)]
+          ; (println n point val)
+    (+ val (memo-foo f (dec n))
+  )))))))
+
+(memo-foo sqr 10)
+(memo-foo sqr 15) ; должно быть 5 строчек если есть принты
+
+; (time (foo sqr 50))
+; (time (memo-foo sqr 50))
+; (quot 1.01 h)
+
+(int (quot 2 h))
+(int (quot 2.512312 h))
+
+(defn integral-memo [f]
+  (fn integral [x]
+    (let [n (int (quot x h))]
+      (if (= (quot x h) (float n))
+        (* h (memo-foo f n))
+        (let [ x_w (* n h)
+              d_x (- x x_w)
+              tail (/ (* (f x) d_x) 2)] 
+          (+ tail (* h (memo-foo f n)))))
+  )))
+
+(test/is (<= (- ((integral-memo line) 2) 2) eps))
+(test/is (<= (- ((integral-memo sqr) 1) 0.33) eps))
+
+
+(time (doall (let [f (integral-f2 sqr)] (map f (range 0 40 0.15)))))
+(time (doall (let [f (integral-memo sqr)] (map f (range 0 40 0.15)))))
+
+(let [f (integral-memo sqr)] 
+  (time (f 1) )
+  (time (f 1))
+  (time (f 1.01213324242314))
+  (time (f 2))
+  (time (f 2.512312)))
+
+
+; 3.2
+
+(defn do-step
+  [f, counter]
+  (let [f_0 (nth counter 0)
+        x1 (nth counter 1)
+        x2 (+ x1 h)] 
+    [(+ f_0  (* (* (+ (f x1) (f x2)) 0.5) h)), x2]))
+
+(defn integral-infinity-series[f]
+  (let [start (f 0)]
+   (iterate (partial do-step f) [start, 0])))
+
+(take 3 (integral-infinity-series sqr))
+(first (nth (integral-infinity-series sqr) 5))
+; (int (quot 0.1 h))
+
+
+(defn integrate [f]
+  (let [series (integral-infinity-series f)]
+    (fn integral [x]
+    (let [ n (int (quot x h))
+        value (first (nth series n))]
+
+      (if (= (quot x h) (float n))
+          value
+          (+ (* (* (f x) h) 0.5) value)))
+)))
+
+(test/is (<= (- (integrate line 2) 2) eps))
+(test/is (<= (- (integrate sqr 1) 0.33) eps))
+
+
+(let [f (integrate sqr)] 
+  (time (f 1) )
+  (time (f 1))
+  (time (f 1.01213324242314))
+  (time (f 2))
+  (time (f 2.512312)))

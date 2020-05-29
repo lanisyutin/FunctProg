@@ -1,11 +1,5 @@
 ; 2.1 Eratosphen
 
-; (defn mod-p? [a, p]
-;     (= 0 (mod a p)))
-
-; (defn filter-col [col p]
-;     (filter (fn [x] (not (mod-p? x p))) col))
-
 (defn era-prime-n [n]
      (nth (reduce
         (fn [primes number]
@@ -17,13 +11,28 @@
 
 (era-prime-n 0)
 (era-prime-n 1)
-(era-prime-n 2)
+(era-prime-n 100)
 
 
 ; 2.2 Infinity prime
 
-(def inf-primes
-    (map era-prime-n (iterate inc 0)))
+; (def inf-primes
+;     (map era-prime-n (iterate inc 0)))
 
-(nth inf-primes 1)
-(take 5 inf-primes)
+; (nth inf-primes 1)
+; (take 5 inf-primes)
+
+(declare primes)
+
+(defn prime?
+  [n]
+  (if (= n 1) 
+    false
+    (every? false? (for [prime primes :while (< prime n)] (= (mod n prime) 0)))))
+
+(def primes (lazy-seq
+              (cons 2 (filter prime? (iterate inc 3)))))
+
+(take 1 primes)
+(take 2 primes)
+(take 100 primes)
