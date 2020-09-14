@@ -44,22 +44,29 @@
         (list (take n coll))
         (my-lazy-partition n (drop n coll))))
 
-(drop 4 primes)
-(take 2 (my-lazy-partition 10 primes))
+(my-partition 2 (apply concat (take 1 (my-lazy-partition 10 primes))))
 
 (defn lazy-parrallel-filter[pred, coll]
     (->> 
-        (my-lazy-partition 40 coll)
-        (take 1)
-        (my-partition 10)
-        (map #(future (doall (filter pred %))))
-         ;важно
-        (mapcat deref)))
+        (my-lazy-partition 120 coll)
+        ; (take 1)
+        ; (apply concat)
+        (mapcat (fn [x] (->>
+                (my-partition 10 x)
+                (map #(future (doall (filter pred %))))
+                (doall)
+                (mapcat deref)))
+        
+        )))
+        
 
-(defn less-than-ten? [n]
-    (Thread/sleep 100)
-    (< n 1000))
+(defn heavy-odd? [n]
+    (Thread/sleep 2)
+    (odd? n))
 
 
-(time (doall (take 20 (lazy-parrallel-filter less-than-ten? primes))))
-(time (doall (take 20 (filter less-than-ten? primes))))
+(time (doall (take 1200 (lazy-parrallel-filter heavy-odd? primes))))
+(time (doall (take 1200 (filter heavy-odd? primes))))
+
+(time (doall (nth (lazy-parrallel-filter heavy-even? primes) 1000)) )
+(time (doall (nth (filter heavy-even? primes)) 1000))

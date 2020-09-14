@@ -327,3 +327,4 @@
 
 (pretty_print (get_Jegalkin_poly (invert (sum (variable :x) (variable :y)))))
 (pretty_print (get_Jegalkin_poly (implication (product (variable :x) (variable :y)) (sum (variable :x) (variable :y)))))
+(pretty_print (get_Jegalkin_poly (implication (variable :x) (variable :y))))

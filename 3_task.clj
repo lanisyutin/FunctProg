@@ -34,24 +34,24 @@
 
 
 (int (quot 2 h))
-(foo line 3)
+(finite-sum line 3)
 
 (def ^:const eps 0.1)
 (test/is (<= (- ((integral-f2 line) 2) 2) eps))
 (test/is (<= (- ((integral-f2 sqr) 1) 0.33) eps))
 
 
-(def memo-foo (memoize (fn   ([f, n]
+(def memo-finite-sum  (memoize (fn   ([f, n]
   (if (= 0 n)
     (f 0)
     (let [point (* n h)
           val (f point)]
           ; (println n point val)
-    (+ val (memo-foo f (dec n))
+    (+ val (memo-finite-sum  f (dec n))
   )))))))
 
-(memo-foo sqr 10)
-(memo-foo sqr 15) ; должно быть 5 строчек если есть принты
+(memo-finite-sum  sqr 10)
+(memo-finite-sum  sqr 15) ; должно быть 5 строчек если есть принты
 
 ; (time (foo sqr 50))
 ; (time (memo-foo sqr 50))
@@ -64,11 +64,12 @@
   (fn integral [x]
     (let [n (int (quot x h))]
       (if (= (quot x h) (float n))
-        (* h (memo-foo f n))
+        (* h (memo-finite-sum  f n))
         (let [ x_w (* n h)
               d_x (- x x_w)
               tail (/ (* (f x) d_x) 2)] 
-          (+ tail (* h (memo-foo f n)))))
+          (+ tail (* h (memo-finite-sum  f n)))))
+(my-partition 2 (nth (my-lazy-partition 10 primes) 0))
   )))
 
 (test/is (<= (- ((integral-memo line) 2) 2) eps))
